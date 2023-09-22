@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Type
 from decimal import Decimal
 from math import radians, sin, cos, asin, sqrt
 
@@ -33,6 +35,10 @@ def haversine(
     lat2: Decimal,
     lon2: Decimal,
 ) -> int:
+    """
+    Haversine formula determines the distance between two points
+    given their geographic coordinates
+    """
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
 
     dlat = lat2 - lat1
@@ -58,7 +64,7 @@ class Route(models.Model):
     distance = models.IntegerField()
 
     def __str__(self) -> str:
-        return f"{self.source.name}-{self.destination.name}"
+        return f"{self.source.name} - {self.destination.name}"
 
     def save(self, *args, **kwargs):
         self.distance = haversine(
@@ -113,9 +119,46 @@ class Journey(models.Model):
     def __str__(self) -> str:
         return f"{self.route} {self.departure_time.strftime('%d %b %Y %H:%M')}"
 
+    class Meta:
+        ordering = ["-departure_time"]
+
+    @staticmethod
+    def validate_time(
+        departure_time: datetime,
+        arrival_time: datetime,
+        error_to_raise: Type[Exception]
+    ) -> None:
+        if arrival_time <= departure_time:
+            raise error_to_raise(
+                {
+                    "arrival_time": "arrival time "
+                    "must not be earlier than "
+                    "departure time"
+                }
+            )
+
+    def clean(self):
+        Journey.validate_time(
+            self.departure_time,
+            self.arrival_time,
+            ValidationError,
+        )
+
+    def save(
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
+    ):
+        self.full_clean()
+        return super(Journey, self).save(
+            force_insert, force_update, using, update_fields
+        )
+
 
 class Order(models.Model):
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -144,7 +187,12 @@ class Ticket(models.Model):
     )
 
     @staticmethod
-    def validate_ticket(car, seat, train, error_to_raise):
+    def validate_ticket(
+        car: int,
+        seat: int,
+        train: Train,
+        error_to_raise: Type[Exception]
+    ) -> None:
         for ticket_attr_value, ticket_attr_name, train_attr_name in [
             (car, "car", "cars"),
             (seat, "seat", "seats_in_car"),
