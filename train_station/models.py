@@ -51,7 +51,7 @@ def haversine(
 
 
 class Route(models.Model):
-    source = models.ForeignKey(
+    origin = models.ForeignKey(
         Station,
         on_delete=models.CASCADE,
         related_name="outbound_routes",
@@ -63,17 +63,47 @@ class Route(models.Model):
     )
     distance = models.IntegerField()
 
-    def __str__(self) -> str:
-        return f"{self.source.name} - {self.destination.name}"
-
-    def save(self, *args, **kwargs):
-        self.distance = haversine(
-            self.source.latitude,
-            self.source.longitude,
+    @property
+    def distance(self) -> int:
+        distance = haversine(
+            self.origin.latitude,
+            self.origin.longitude,
             self.destination.latitude,
             self.destination.longitude,
         )
-        super().save(*args, **kwargs)
+        return distance
+
+    def __str__(self) -> str:
+        return f"{self.origin.name} - {self.destination.name}"
+
+    @staticmethod
+    def validate_stations(
+        origin: Station,
+        destination: Station,
+        error_to_raise: Type[Exception]
+    ) -> None:
+        if origin == destination:
+            raise error_to_raise(
+                {
+                    "destination": "destination point "
+                    "cannot be the same "
+                    "as the origin point"
+                }
+            )
+
+    def clean(self):
+        Route.validate_stations(
+            self.origin,
+            self.destination,
+            ValidationError,
+        )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super(Route, self).save(*args, **kwargs)
+
+    class Meta:
+        unique_together = ("origin", "destination")
 
 
 class TrainType(models.Model):

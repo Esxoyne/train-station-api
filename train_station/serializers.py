@@ -26,9 +26,18 @@ class StationSerializer(serializers.ModelSerializer):
 
 
 class RouteSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        data = super(RouteSerializer, self).validate(attrs=attrs)
+        Route.validate_stations(
+            attrs["origin"],
+            attrs["destination"],
+            ValidationError,
+        )
+        return data
+
     class Meta:
         model = Route
-        fields = ("id", "source", "destination", "distance")
+        fields = ("id", "origin", "destination", "distance")
 
 
 class TrainTypeSerializer(serializers.ModelSerializer):
