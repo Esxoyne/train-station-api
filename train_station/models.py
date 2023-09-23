@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import timezone
 from typing import Type
 from decimal import Decimal
 from math import radians, sin, cos, asin, sqrt
@@ -39,13 +40,14 @@ def haversine(
     Haversine formula determines the distance between two points
     given their geographic coordinates
     """
+    earth_radius = 6371  # radius of the Earth in km
+
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
 
     dlat = lat2 - lat1
     dlon = lon2 - lon1
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
-    earth_radius = 6371
 
     return int(c * earth_radius)
 
@@ -61,7 +63,6 @@ class Route(models.Model):
         on_delete=models.CASCADE,
         related_name="inbound_routes",
     )
-    distance = models.IntegerField()
 
     @property
     def distance(self) -> int:
@@ -128,7 +129,7 @@ class Train(models.Model):
         return self.cars * self.seats_in_car
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name} ({self.train_type})"
 
 
 class Journey(models.Model):
@@ -147,7 +148,9 @@ class Journey(models.Model):
     crew = models.ManyToManyField(CrewMember)
 
     def __str__(self) -> str:
-        return f"{self.route} {self.departure_time.strftime('%d %b %Y %H:%M')}"
+        return (
+            f"{self.route} ({self.departure_time.strftime('%d %b %Y %H:%M')})"
+        )
 
     class Meta:
         ordering = ["-departure_time"]
@@ -156,7 +159,7 @@ class Journey(models.Model):
     def validate_time(
         departure_time: datetime,
         arrival_time: datetime,
-        error_to_raise: Type[Exception]
+        error_to_raise: Type[Exception],
     ) -> None:
         if arrival_time <= departure_time:
             raise error_to_raise(
@@ -164,6 +167,13 @@ class Journey(models.Model):
                     "arrival_time": "arrival time "
                     "must not be earlier than "
                     "departure time"
+                }
+            )
+        if departure_time <= timezone.now():
+            raise error_to_raise(
+                {
+                    "departure_time": "departure time "
+                    "must not be in the past"
                 }
             )
 
