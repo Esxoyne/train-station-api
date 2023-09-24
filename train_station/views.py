@@ -1,10 +1,12 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from .permissions import IsAdminOrAuthenticatedReadOnly
 from .models import (
@@ -20,10 +22,12 @@ from .serializers import (
     CrewMemberSerializer,
     CrewMemberListSerializer,
     OrderListSerializer,
+    StationImageSerializer,
     StationSerializer,
     RouteSerializer,
     RouteListSerializer,
     RouteRetrieveSerializer,
+    TrainImageSerializer,
     TrainTypeSerializer,
     TrainSerializer,
     TrainListSerializer,
@@ -59,6 +63,27 @@ class StationViewSet(viewsets.ModelViewSet):
     serializer_class = StationSerializer
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action == "upload_image":
+            return StationImageSerializer
+
+        return StationSerializer
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="upload-image",
+        permission_classes=[IsAdminUser],
+    )
+    def upload_image(self, request, pk=None):
+        """Endpoint for uploading an image to a specific station"""
+        station = self.get_object()
+        serializer = self.get_serializer(station, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RouteViewSet(viewsets.ModelViewSet):
@@ -128,7 +153,25 @@ class TrainViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return TrainRetrieveSerializer
 
+        if self.action == "upload_image":
+            return TrainImageSerializer
+
         return TrainSerializer
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="upload-image",
+        permission_classes=[IsAdminUser],
+    )
+    def upload_image(self, request, pk=None):
+        """Endpoint for uploading an image to a specific train"""
+        train = self.get_object()
+        serializer = self.get_serializer(train, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class JourneyViewSet(viewsets.ModelViewSet):
