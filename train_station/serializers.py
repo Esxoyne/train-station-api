@@ -171,11 +171,7 @@ class TicketSeatSerializer(TicketSerializer):
 class JourneyRetrieveSerializer(JourneySerializer):
     route = RouteListSerializer(read_only=True)
     train = TrainListSerializer(read_only=True)
-    crew = serializers.SlugRelatedField(
-        slug_field="full_name",
-        many=True,
-        read_only=True,
-    )
+    crew = CrewMemberListSerializer(many=True, read_only=True)
     taken_seats = TicketSeatSerializer(
         source="tickets",
         many=True,

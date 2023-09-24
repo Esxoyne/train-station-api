@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 
 from .models import (
     CrewMember,
@@ -30,6 +31,12 @@ from .serializers import (
     JourneyRetrieveSerializer,
     OrderSerializer,
 )
+
+
+class StandardResultSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
 
 
 class CrewMemberViewSet(viewsets.ModelViewSet):
@@ -86,6 +93,7 @@ class TrainTypeViewSet(viewsets.ModelViewSet):
 
 class TrainViewSet(viewsets.ModelViewSet):
     queryset = Train.objects.all()
+    pagination_class = StandardResultSetPagination
     serializer_class = TrainSerializer
 
     def get_queryset(self):
@@ -113,6 +121,7 @@ class TrainViewSet(viewsets.ModelViewSet):
 
 class JourneyViewSet(viewsets.ModelViewSet):
     queryset = Journey.objects.all()
+    pagination_class = StandardResultSetPagination
     serializer_class = JourneySerializer
 
     @staticmethod
@@ -183,6 +192,7 @@ class JourneyViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
+    pagination_class = StandardResultSetPagination
     serializer_class = OrderSerializer
 
     def get_queryset(self):
@@ -193,6 +203,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 "tickets__journey__route__origin",
                 "tickets__journey__route__destination",
                 "tickets__journey__train__train_type",
+                "tickets__journey__crew",
             )
 
         return queryset.filter(user=self.request.user)
