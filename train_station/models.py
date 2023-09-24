@@ -153,7 +153,7 @@ class Journey(models.Model):
         )
 
     class Meta:
-        ordering = ["-departure_time"]
+        ordering = ["departure_time"]
 
     @staticmethod
     def validate_time(

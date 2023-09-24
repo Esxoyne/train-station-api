@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.db.models import F, Count
 from rest_framework import viewsets
 
 from .models import (
@@ -158,10 +159,15 @@ class JourneyViewSet(viewsets.ModelViewSet):
                 "route__origin",
                 "route__destination",
                 "train__train_type",
-            )
+            ).prefetch_related("crew")
 
-        if self.action == "retrieve":
-            queryset = queryset.prefetch_related("crew")
+        if self.action == "list":
+            queryset = queryset.annotate(
+                tickets_available=(
+                    F("train__cars") * F("train__seats_in_car")
+                    - Count("tickets")
+                )
+            ).order_by("departure_time")
 
         return queryset.distinct()
 
