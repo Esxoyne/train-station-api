@@ -1,4 +1,6 @@
 from datetime import datetime
+import os
+import uuid
 from django.utils import timezone
 from typing import Type
 from decimal import Decimal
@@ -7,6 +9,7 @@ from math import radians, sin, cos, asin, sqrt
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 
 
 class CrewMember(models.Model):
@@ -21,10 +24,24 @@ class CrewMember(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
+def generate_file_name(info, filename):
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(info)}-{uuid.uuid4()}{extension}"
+
+    return filename
+
+
+def station_image_file_path(instance, filename):
+    filename = generate_file_name(instance.name, filename)
+
+    return os.path.join("uploads/stations/", filename)
+
+
 class Station(models.Model):
     name = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=7, decimal_places=4)
     longitude = models.DecimalField(max_digits=7, decimal_places=4)
+    image = models.ImageField(null=True, upload_to=station_image_file_path)
 
     def __str__(self) -> str:
         return self.name
@@ -114,6 +131,12 @@ class TrainType(models.Model):
         return self.name
 
 
+def train_image_file_path(instance, filename):
+    filename = generate_file_name(instance.name, filename)
+
+    return os.path.join("uploads/trains/", filename)
+
+
 class Train(models.Model):
     name = models.CharField(max_length=255)
     cars = models.IntegerField()
@@ -123,6 +146,7 @@ class Train(models.Model):
         on_delete=models.CASCADE,
         related_name="trains",
     )
+    image = models.ImageField(null=True, upload_to=train_image_file_path)
 
     @property
     def capacity(self) -> int:
