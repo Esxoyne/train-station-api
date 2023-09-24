@@ -75,7 +75,7 @@ class Route(models.Model):
         return distance
 
     def __str__(self) -> str:
-        return f"{self.origin.name} - {self.destination.name}"
+        return f"{self.origin} - {self.destination}"
 
     @staticmethod
     def validate_stations(

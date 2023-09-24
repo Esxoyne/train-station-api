@@ -116,6 +116,11 @@ class JourneyListSerializer(JourneySerializer):
         source="train.capacity",
         read_only=True,
     )
+    crew = serializers.SlugRelatedField(
+        slug_field="full_name",
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Journey
@@ -126,6 +131,7 @@ class JourneyListSerializer(JourneySerializer):
             "arrival_time",
             "train",
             "train_capacity",
+            "crew",
         )
 
 
