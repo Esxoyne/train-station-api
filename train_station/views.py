@@ -15,6 +15,7 @@ from .models import (
 from .serializers import (
     CrewMemberSerializer,
     CrewMemberListSerializer,
+    OrderListSerializer,
     StationSerializer,
     RouteSerializer,
     RouteListSerializer,
@@ -27,8 +28,6 @@ from .serializers import (
     JourneyListSerializer,
     JourneyRetrieveSerializer,
     OrderSerializer,
-    TicketSerializer,
-    TicketListSerializer,
 )
 
 
@@ -130,17 +129,23 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+    def get_queryset(self):
+        queryset = self.queryset
 
-class TicketViewSet(viewsets.ModelViewSet):
-    queryset = Ticket.objects.select_related(
-        "journey__route__origin",
-        "journey__route__destination",
-        "journey__train__train_type",
-    )
-    serializer_class = TicketSerializer
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.prefetch_related(
+                "tickets__journey__route__origin",
+                "tickets__journey__route__destination",
+                "tickets__journey__train__train_type",
+            )
+
+        return queryset.filter(user=self.request.user)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
-            return TicketListSerializer
+            return OrderListSerializer
 
-        return TicketSerializer
+        return OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
