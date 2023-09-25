@@ -7,6 +7,12 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiExample,
+)
+from drf_spectacular.types import OpenApiTypes
 
 from .permissions import IsAdminOrAuthenticatedReadOnly
 from .models import (
@@ -118,6 +124,23 @@ class RouteViewSet(viewsets.ModelViewSet):
 
         return RouteSerializer
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "origin",
+                type=int,
+                description="Filter by origin station id",
+            ),
+            OpenApiParameter(
+                "destination",
+                type=int,
+                description="Filter by destination station id",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class TrainTypeViewSet(viewsets.ModelViewSet):
     queryset = TrainType.objects.all()
@@ -172,6 +195,18 @@ class TrainViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "type",
+                type=int,
+                description="Filter by train type id",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class JourneyViewSet(viewsets.ModelViewSet):
@@ -245,6 +280,58 @@ class JourneyViewSet(viewsets.ModelViewSet):
             return JourneyRetrieveSerializer
 
         return JourneySerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "route",
+                type=int,
+                description="Filter by route id",
+            ),
+            OpenApiParameter(
+                "departure",
+                type=OpenApiTypes.DATE,
+                description="Filter by departure date",
+                examples=[
+                    OpenApiExample(
+                        "Example 1",
+                        summary=(
+                            "Return journeys with "
+                            "departure on October 8, 2024"
+                        ),
+                        value="2024-10-08",
+                    )
+                ]
+            ),
+            OpenApiParameter(
+                "arrival",
+                type=OpenApiTypes.DATE,
+                description="Filter by arrival date",
+                examples=[
+                    OpenApiExample(
+                        "Example 1",
+                        summary=(
+                            "Return journeys with "
+                            "arrival on October 8, 2024"
+                        ),
+                        value="2024-10-08",
+                    )
+                ]
+            ),
+            OpenApiParameter(
+                "train",
+                type=int,
+                description="Filter by train id",
+            ),
+            OpenApiParameter(
+                "crew",
+                type={"type": "list", "items": {"type": "number"}},
+                description="Filter by crew member ids",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class OrderViewSet(
