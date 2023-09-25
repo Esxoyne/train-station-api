@@ -38,7 +38,7 @@ def station_image_file_path(instance, filename):
 
 
 class Station(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     latitude = models.DecimalField(max_digits=7, decimal_places=4)
     longitude = models.DecimalField(max_digits=7, decimal_places=4)
     image = models.ImageField(null=True, upload_to=station_image_file_path)
@@ -191,13 +191,6 @@ class Journey(models.Model):
                     "arrival_time": "arrival time "
                     "must not be earlier than "
                     "departure time"
-                }
-            )
-        if departure_time <= timezone.now():
-            raise error_to_raise(
-                {
-                    "departure_time": "departure time "
-                    "must not be in the past"
                 }
             )
 
