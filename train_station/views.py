@@ -2,7 +2,6 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import mixins, status, viewsets
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -54,7 +53,6 @@ class StandardResultSetPagination(PageNumberPagination):
 class CrewMemberViewSet(viewsets.ModelViewSet):
     queryset = CrewMember.objects.all()
     serializer_class = CrewMemberSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
@@ -67,7 +65,6 @@ class CrewMemberViewSet(viewsets.ModelViewSet):
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
@@ -95,7 +92,6 @@ class StationViewSet(viewsets.ModelViewSet):
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     def get_queryset(self):
@@ -145,7 +141,6 @@ class RouteViewSet(viewsets.ModelViewSet):
 class TrainTypeViewSet(viewsets.ModelViewSet):
     queryset = TrainType.objects.all()
     serializer_class = TrainTypeSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
 
@@ -153,7 +148,6 @@ class TrainViewSet(viewsets.ModelViewSet):
     queryset = Train.objects.all()
     pagination_class = StandardResultSetPagination
     serializer_class = TrainSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     def get_queryset(self):
@@ -213,7 +207,6 @@ class JourneyViewSet(viewsets.ModelViewSet):
     queryset = Journey.objects.all()
     pagination_class = StandardResultSetPagination
     serializer_class = JourneySerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     @staticmethod
@@ -343,7 +336,6 @@ class OrderViewSet(
     queryset = Order.objects.all()
     pagination_class = StandardResultSetPagination
     serializer_class = OrderSerializer
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
