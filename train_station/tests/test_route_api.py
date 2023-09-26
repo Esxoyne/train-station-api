@@ -26,10 +26,10 @@ def sample_station(**params):
     return Station.objects.create(**defaults)
 
 
-def sample_route(**params):
+def sample_route(origin, destination, **params):
     defaults = {
-        "origin": Station.objects.get(pk=1),
-        "destination": Station.objects.get(pk=2),
+        "origin": origin,
+        "destination": destination,
     }
     defaults.update(params)
 
@@ -62,10 +62,13 @@ class AuthenticatedRouteAPITests(TestCase):
         self.station_1 = sample_station()
         self.station_2 = sample_station(name="Lviv")
 
-        self.route_1 = sample_route()
+        self.route_1 = sample_route(
+            self.station_1,
+            self.station_2,
+        )
         self.route_2 = sample_route(
-            origin=self.station_2,
-            destination=self.station_1
+            self.station_2,
+            self.station_1
         )
 
         self.serializer_1 = RouteListSerializer(self.route_1)

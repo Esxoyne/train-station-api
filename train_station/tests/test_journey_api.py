@@ -34,10 +34,10 @@ def sample_station(**params):
     return Station.objects.create(**defaults)
 
 
-def sample_route(**params):
+def sample_route(origin, destination, **params):
     defaults = {
-        "origin": Station.objects.get(pk=1),
-        "destination": Station.objects.get(pk=2),
+        "origin": origin,
+        "destination": destination,
     }
     defaults.update(params)
 
@@ -53,9 +53,7 @@ def sample_train_type(**params):
     return TrainType.objects.create(**defaults)
 
 
-def sample_train(**params):
-    train_type = TrainType.objects.get(pk=1)
-
+def sample_train(train_type, **params):
     defaults = {
         "name": "ICE 4",
         "cars": 5,
@@ -74,10 +72,7 @@ def sample_crew(**params):
     return CrewMember.objects.create(**defaults)
 
 
-def sample_journey(**params):
-    route = Route.objects.get(pk=1)
-    train = Train.objects.get(pk=1)
-
+def sample_journey(route, train, **params):
     defaults = {
         "route": route,
         "train": train,
@@ -112,10 +107,10 @@ class AuthenticatedJourneyAPITests(TestCase):
         )
         self.client.force_authenticate(self.user)
 
-        sample_train_type()
+        train_type = sample_train_type()
 
-        self.train_1 = sample_train(name="ICE 3")
-        self.train_2 = sample_train(name="ICE TD")
+        self.train_1 = sample_train(name="ICE 3", train_type=train_type)
+        self.train_2 = sample_train(name="ICE TD", train_type=train_type)
 
         self.crew_1 = sample_crew()
         self.crew_2 = sample_crew(first_name="Bob")
@@ -123,11 +118,8 @@ class AuthenticatedJourneyAPITests(TestCase):
         self.station_1 = sample_station()
         self.station_2 = sample_station(name="Lviv")
 
-        self.route_1 = sample_route()
-        self.route_2 = sample_route(
-            origin=self.station_2,
-            destination=self.station_1,
-        )
+        self.route_1 = sample_route(self.station_1, self.station_2)
+        self.route_2 = sample_route(self.station_2, self.station_1)
 
         self.journey_1 = sample_journey(
             train=self.train_1,
@@ -153,7 +145,7 @@ class AuthenticatedJourneyAPITests(TestCase):
         self.assertEqual(len(res.data["results"]), 2)
 
     def test_filter_journeys_by_route(self):
-        res = self.client.get(JOURNEY_URL, {"route": 1})
+        res = self.client.get(JOURNEY_URL, {"route": self.route_1.id})
 
         self.assertEqual(len(res.data["results"]), 1)
 
@@ -168,7 +160,7 @@ class AuthenticatedJourneyAPITests(TestCase):
         self.assertEqual(len(res.data["results"]), 1)
 
     def test_filter_journeys_by_train(self):
-        res = self.client.get(JOURNEY_URL, {"train": 1})
+        res = self.client.get(JOURNEY_URL, {"train": self.train_1.id})
 
         self.assertEqual(len(res.data["results"]), 1)
 
@@ -220,11 +212,11 @@ class AdminJourneyAPITests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_journey(self):
-        sample_station()
-        sample_station(name="Lviv")
-        sample_train_type()
-        route = sample_route()
-        train = sample_train()
+        station_1 = sample_station()
+        station_2 = sample_station(name="Lviv")
+        train_type = sample_train_type()
+        route = sample_route(station_1, station_2)
+        train = sample_train(train_type)
 
         crew = sample_crew()
 

@@ -55,9 +55,7 @@ def sample_train_type(**params):
     return TrainType.objects.create(**defaults)
 
 
-def sample_train(**params):
-    train_type = TrainType.objects.get(pk=1)
-
+def sample_train(train_type, **params):
     defaults = {
         "name": "ICE 4",
         "cars": 5,
@@ -76,9 +74,8 @@ def sample_crew(**params):
     return CrewMember.objects.create(**defaults)
 
 
-def sample_journey(**params):
+def sample_journey(train, **params):
     route = sample_route()
-    train = Train.objects.get(pk=1)
 
     defaults = {
         "route": route,
@@ -136,7 +133,7 @@ class TrainImageUploadTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_image_to_train_list(self):
+    def test_post_image_to_train_list_should_not_work(self):
         url = TRAIN_URL
         with tempfile.NamedTemporaryFile(suffix=".jpg") as ntf:
             img = Image.new("RGB", (10, 10))
@@ -148,7 +145,7 @@ class TrainImageUploadTests(TestCase):
                     "name": "Train",
                     "cars": 5,
                     "seats_in_car": 15,
-                    "train_type": [1],
+                    "train_type": self.train_type.id,
                     "image": ntf,
                 },
                 format="multipart",
@@ -232,7 +229,7 @@ class AuthenticatedTrainAPITests(TestCase):
         self.assertEqual(res.data["results"], serializer.data)
 
     def test_filter_trains_by_type(self):
-        res = self.client.get(TRAIN_URL, {"type": 1})
+        res = self.client.get(TRAIN_URL, {"type": self.type_1.id})
 
         self.assertIn(self.serializer_1.data, res.data["results"])
         self.assertIn(self.serializer_2.data, res.data["results"])
