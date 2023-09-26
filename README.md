@@ -19,33 +19,22 @@ Built using `Django REST Framework`
 
 - Ability to order tickets for train journeys
 
-## DB diagram
-
-![ER diagram](db_diagram.jpg)
-
 ## Getting started
 
-### Prerequisites
-
-> Python 3 is required
-
-### Installation
+*Rename `.env.sample` file to `.env` and update environment variables accordingly*
 
 ```shell
 # clone the repo
 git clone https://github.com/Esxoyne/train-station-api.git
 cd train-station-api
 
-# create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate            # on Linux/macOS
-venv\Scripts\Activate               # on Windows
+# build & run the container
+docker-compose up
 
-# install dependencies
-pip install -r requirements.txt
-
-# start the server on localhost
-python manage.py runserver
+# create a super user
+docker-compose exec app python manage.py createsuperuser
 ```
 
-The application is running at `http://127.0.0.1:8000/`
+## DB diagram
+
+![ER diagram](db_diagram.jpg)
