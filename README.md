@@ -21,7 +21,7 @@ Built using `Django REST Framework`
 
 ## DB diagram
 
-![ER diagram](db_diagram.png)
+![ER diagram](db_diagram.jpg)
 
 ## Getting started
 
